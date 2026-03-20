@@ -19,6 +19,9 @@ jobs:
         php-version: '8.3'
         extensions: mbstring, dom, fileinfo, sqlite, pdo_sqlite
         
+    - name: Copy .env
+      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+
     - name: Install Dependencies
       run: composer update -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
       
