@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TravelOrderStatus;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,12 +11,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TravelOrder extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasUlids;
 
     /**
      * Atributos que podem ser preenchidos em massa.
      */
     protected $fillable = [
+        'order_number',
         'user_id',
         'origin',
         'destination',
@@ -41,6 +43,13 @@ class TravelOrder extends Model
         'departure_date' => 'date',
         'return_date' => 'date',
     ];
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        return $this->where('id', $value)
+            ->orWhere('order_number', $value)
+            ->firstOrFail();
+    }
 
     /**
      * Relacionamento: Um pedido pertence a um usuário.
@@ -87,7 +96,7 @@ class TravelOrder extends Model
                 $q->where(function ($sub) use ($search) {
                     $sub->where('destination', 'like', "%{$search}%")
                         ->orWhere('origin', 'like', "%{$search}%")
-                        ->orWhere('requester_name', 'like', "%{$search}%");
+                        ->orWhereRelation('user', 'name', 'like', "%{$search}%");
                 });
             });
     }

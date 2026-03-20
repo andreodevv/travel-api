@@ -1,0 +1,269 @@
+{
+   "info":{
+      "name":"Travel Corporate API - Final",
+      "description":"Collection completa com filtros avançados, suporte a ULID e Order Number.",
+      "schema":"https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+   },
+   "item":[
+      {
+         "name":"0. Autenticação",
+         "item":[
+            {
+               "name":"Login (Gerar JWT)",
+               "event":[
+                  {
+                     "listen":"test",
+                     "script":{
+                        "exec":[
+                           "const response = pm.response.json();",
+                           "if (response.access_token) {",
+                           "    pm.collectionVariables.set(\"jwt_token\", response.access_token);",
+                           "    console.log(\"Token JWT salvo automaticamente!\");",
+                           "}"
+                        ],
+                        "type":"text/javascript"
+                     }
+                  }
+               ],
+               "request":{
+                  "method":"POST",
+                  "header":[
+                     
+                  ],
+                  "body":{
+                     "mode":"raw",
+                     "raw":"{\n    // Credenciais do Seeder:\n    // Admin: admin@email.com / password\n    // Usuário: user@email.com / password\n    \"email\": \"admin@email.com\",\n    \"password\": \"password\"\n}",
+                     "options":{
+                        "raw":{
+                           "language":"json"
+                        }
+                     }
+                  },
+                  "url":{
+                     "raw":"{{base_url}}/api/login",
+                     "host":[
+                        "{{base_url}}"
+                     ],
+                     "path":[
+                        "api",
+                        "login"
+                     ]
+                  }
+               }
+            }
+         ]
+      },
+      {
+         "name":"1. Pedidos de Viagem",
+         "item":[
+            {
+               "name":"Admin Only",
+               "item":[
+                  {
+                     "name":"Aprovar Pedido",
+                     "request":{
+                        "method":"PATCH",
+                        "header":[
+                           
+                        ],
+                        "body":{
+                           "mode":"raw",
+                           "raw":"{\n    \"status\": \"aprovado\"\n}",
+                           "options":{
+                              "raw":{
+                                 "language":"json"
+                              }
+                           }
+                        },
+                        "url":{
+                           "raw":"{{base_url}}/api/travel-orders/:travel_order_id/status",
+                           "host":[
+                              "{{base_url}}"
+                           ],
+                           "path":[
+                              "api",
+                              "travel-orders",
+                              ":travel_order_id",
+                              "status"
+                           ],
+                           "variable":[
+                              {
+                                 "key":"travel_order_id",
+                                 "value":"TRV-X7KP9M2B",
+                                 "description":"Pode ser o ULID ou o Número do Pedido (TRV-XXXXXXXX)"
+                              }
+                           ]
+                        }
+                     }
+                  },
+                  {
+                     "name":"Cancelar Pedido",
+                     "request":{
+                        "method":"PATCH",
+                        "header":[
+                           
+                        ],
+                        "body":{
+                           "mode":"raw",
+                           "raw":"{\n    \"status\": \"cancelado\"\n}",
+                           "options":{
+                              "raw":{
+                                 "language":"json"
+                              }
+                           }
+                        },
+                        "url":{
+                           "raw":"{{base_url}}/api/travel-orders/:travel_order_id/status",
+                           "host":[
+                              "{{base_url}}"
+                           ],
+                           "path":[
+                              "api",
+                              "travel-orders",
+                              ":travel_order_id",
+                              "status"
+                           ],
+                           "variable":[
+                              {
+                                 "key":"travel_order_id",
+                                 "value":"TRV-X7KP9M2B",
+                                 "description":"Pode ser o ULID ou o Número do Pedido (TRV-XXXXXXXX)"
+                              }
+                           ]
+                        }
+                     }
+                  }
+               ],
+               "description":"Ações restritas a administradores"
+            },
+            {
+               "name":"Listar Pedidos (Filtros Avançados)",
+               "request":{
+                  "method":"GET",
+                  "header":[
+                     
+                  ],
+                  "url":{
+                     "raw":"{{base_url}}/api/travel-orders?status=solicitado&origin=Belo&destination=Floripa&start_date=2026-01-01&end_date=2026-12-31&search=Andre",
+                     "host":[
+                        "{{base_url}}"
+                     ],
+                     "path":[
+                        "api",
+                        "travel-orders"
+                     ],
+                     "query":[
+                        {
+                           "key":"status",
+                           "value":"solicitado",
+                           "description":"solicitado, aprovado ou cancelado"
+                        },
+                        {
+                           "key":"origin",
+                           "value":"Belo",
+                           "description":"Busca parcial por origem"
+                        },
+                        {
+                           "key":"destination",
+                           "value":"Floripa",
+                           "description":"Busca parcial por destino"
+                        },
+                        {
+                           "key":"start_date",
+                           "value":"2026-01-01",
+                           "description":"Data de ida inicial (Y-m-d)"
+                        },
+                        {
+                           "key":"end_date",
+                           "value":"2026-12-31",
+                           "description":"Data de ida final (Y-m-d)"
+                        },
+                        {
+                           "key":"search",
+                           "value":"Andre",
+                           "description":"Busca global (nome, origem ou destino)"
+                        }
+                     ]
+                  },
+                  "description":"Se logado como admin, mostra tudo. Se usuário comum, mostra apenas os próprios."
+               }
+            },
+            {
+               "name":"Criar Pedido",
+               "request":{
+                  "method":"POST",
+                  "header":[
+                     
+                  ],
+                  "body":{
+                     "mode":"raw",
+                     "raw":"{\n    \"origin\": \"Curitiba\",\n    \"destination\": \"Rio de Janeiro\",\n    \"departure_date\": \"2026-07-20\",\n    \"return_date\": \"2026-07-25\"\n}",
+                     "options":{
+                        "raw":{
+                           "language":"json"
+                        }
+                     }
+                  },
+                  "url":{
+                     "raw":"{{base_url}}/api/travel-orders",
+                     "host":[
+                        "{{base_url}}"
+                     ],
+                     "path":[
+                        "api",
+                        "travel-orders"
+                     ]
+                  }
+               }
+            },
+            {
+               "name":"Consultar Detalhes",
+               "request":{
+                  "method":"GET",
+                  "header":[
+                     
+                  ],
+                  "url":{
+                     "raw":"{{base_url}}/api/travel-orders/:travel_order_id",
+                     "host":[
+                        "{{base_url}}"
+                     ],
+                     "path":[
+                        "api",
+                        "travel-orders",
+                        ":travel_order_id"
+                     ],
+                     "variable":[
+                        {
+                           "key":"travel_order_id",
+                           "value":"TRV-X7KP9M2B",
+                           "description":"Insira o ULID ou o Order Number"
+                        }
+                     ]
+                  }
+               }
+            }
+         ],
+         "auth":{
+            "type":"bearer",
+            "bearer":[
+               {
+                  "key":"token",
+                  "value":"{{jwt_token}}",
+                  "type":"string"
+               }
+            ]
+         }
+      }
+   ],
+   "variable":[
+      {
+         "key":"base_url",
+         "value":"http://localhost"
+      },
+      {
+         "key":"jwt_token",
+         "value":""
+      }
+   ]
+}

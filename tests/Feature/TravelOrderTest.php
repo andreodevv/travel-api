@@ -35,9 +35,12 @@ class TravelOrderTest extends TestCase
             'destination' => 'Florianópolis'
         ]);
         
+        // Verifica a estrutura atualizada com ULID e Order Number
         $response->assertJsonStructure([
             'data' => [
                 'id',
+                'order_number',
+                'requester_name',
                 'origin',
                 'destination',
                 'departure_date',
@@ -106,6 +109,24 @@ class TravelOrderTest extends TestCase
     // =========================================================================
 
     /** @test */
+    public function test_it_can_fetch_order_by_ulid_or_order_number()
+    {
+        $user = User::factory()->create();
+        $order = TravelOrder::factory()->create(['user_id' => $user->id]);
+
+        // Consulta 1: Usando a Chave Primária (ULID)
+        $this->actingAs($user, 'api')
+             ->getJson("/api/travel-orders/{$order->id}")
+             ->assertStatus(200);
+
+        // Consulta 2: Usando a Chave de Negócio (Order Number)
+        $this->actingAs($user, 'api')
+             ->getJson("/api/travel-orders/{$order->order_number}")
+             ->assertStatus(200)
+             ->assertJsonPath('data.id', $order->id);
+    }
+
+    /** @test */
     public function test_a_user_can_only_view_their_own_orders()
     {
         $hacker = User::factory()->create();
@@ -146,7 +167,6 @@ class TravelOrderTest extends TestCase
         $response = $this->actingAs($admin, 'api')->getJson('/api/travel-orders');
 
         $response->assertStatus(200);
-        // O admin deve ver os 2 pedidos, independente de quem criou
         $response->assertJsonCount(2, 'data');
     }
     
@@ -182,7 +202,6 @@ class TravelOrderTest extends TestCase
         $response->assertStatus(200);
         $this->assertEquals(TravelOrderStatus::APPROVED, $order->fresh()->status);
 
-        // Verifica se a notificação foi enviada corretamente para o dono do pedido
         Notification::assertSentTo(
             [$order->user],
             \App\Notifications\OrderStatusChangedNotification::class
@@ -235,5 +254,83 @@ class TravelOrderTest extends TestCase
         ]);
 
         $response->assertStatus(422); 
+    }
+
+    // =========================================================================
+    // BLOCO 4: FILTROS E BUSCA (Query Scopes)
+    // =========================================================================
+
+    /** @test */
+    public function test_it_can_filter_orders_by_status()
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        
+        // Cria 2 pedidos solicitados e 1 aprovado
+        TravelOrder::factory()->count(2)->create(['status' => TravelOrderStatus::REQUESTED]);
+        TravelOrder::factory()->create(['status' => TravelOrderStatus::APPROVED]);
+
+        // Testa buscando só os aprovados
+        $response = $this->actingAs($admin, 'api')->getJson('/api/travel-orders?status=aprovado');
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(1, 'data'); // Deve retornar apenas 1
+        $this->assertEquals('aprovado', $response->json('data.0.status'));
+    }
+
+    /** @test */
+    public function test_it_can_filter_orders_by_date_range()
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        
+        // Cria pedidos com datas específicas
+        TravelOrder::factory()->create(['departure_date' => '2026-05-10']);
+        TravelOrder::factory()->create(['departure_date' => '2026-05-15']);
+        TravelOrder::factory()->create(['departure_date' => '2026-06-20']); // Fora do filtro
+
+        // Filtra pedidos entre 01 e 18 de Maio
+        $response = $this->actingAs($admin, 'api')->getJson('/api/travel-orders?start_date=2026-05-01&end_date=2026-05-18');
+
+        $response->assertStatus(200);
+        $response->assertJsonCount(2, 'data'); // Deve retornar os 2 de Maio e ignorar o de Junho
+    }
+
+    /** @test */
+    public function test_it_can_search_globally_by_origin_destination_or_user_name()
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        
+        $user1 = User::factory()->create(['name' => 'Carlos Silva']);
+        $user2 = User::factory()->create(['name' => 'Ana Souza']);
+
+        // Pedido do Carlos (Origem: São Paulo, Destino: Rio)
+        TravelOrder::factory()->create([
+            'user_id' => $user1->id,
+            'origin' => 'São Paulo',
+            'destination' => 'Rio de Janeiro'
+        ]);
+
+        // Pedido da Ana (Origem: Salvador, Destino: Recife)
+        TravelOrder::factory()->create([
+            'user_id' => $user2->id,
+            'origin' => 'Salvador',
+            'destination' => 'Recife'
+        ]);
+
+        // Busca pela ORIGEM (Deve achar o do Carlos)
+        $this->actingAs($admin, 'api')
+             ->getJson('/api/travel-orders?search=São Paulo')
+             ->assertJsonCount(1, 'data')
+             ->assertJsonPath('data.0.origin', 'São Paulo');
+
+        // Busca pelo NOME DO USUÁRIO (Deve achar o da Ana)
+        $this->actingAs($admin, 'api')
+             ->getJson('/api/travel-orders?search=Ana Souza')
+             ->assertJsonCount(1, 'data')
+             ->assertJsonPath('data.0.requester_name', 'Ana Souza');
+             
+        // Busca que não existe (Deve retornar vazio)
+        $this->actingAs($admin, 'api')
+             ->getJson('/api/travel-orders?search=Miami')
+             ->assertJsonCount(0, 'data');
     }
 }

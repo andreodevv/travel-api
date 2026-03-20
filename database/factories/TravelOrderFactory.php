@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\TravelOrder;
 use App\Enums\TravelOrderStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 class TravelOrderFactory extends Factory
 {
@@ -15,6 +16,7 @@ class TravelOrderFactory extends Factory
         
         return [
             'user_id' => User::factory(), 
+            'order_number' => 'TRV-' . date('Y') . '-' . strtoupper(Str::random(6)), 
             'origin' => fake()->city(),
             'destination' => fake()->city(),
             'departure_date' => $departure->format('Y-m-d'),

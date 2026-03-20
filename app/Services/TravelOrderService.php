@@ -10,12 +10,34 @@ use Exception;
 
 class TravelOrderService
 {
-    public function create(array $data, int $userId): TravelOrder
+    public function create(array $data, string $userId): TravelOrder
     {
-        return TravelOrder::create(array_merge($data, ['user_id' => $userId]));
+        $data['user_id'] = $userId;        
+        $data['order_number'] = $this->generateUniqueOrderNumber();
+
+        return TravelOrder::create($data);
     }
 
-    public function updateStatus(TravelOrder $order, TravelOrderStatus $newStatus)
+    /**
+     * Gera um número de pedido curto, legível e absolutamente único.
+     */
+    private function generateUniqueOrderNumber(): string
+    {
+        // Alfabeto seguro: sem 0, O, 1, I, L para evitar confusão visual
+        $safeAlphabet = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+        
+        do {
+            // Pega 8 caracteres aleatórios do nosso alfabeto seguro
+            $code = substr(str_shuffle($safeAlphabet), 0, 8);
+            $orderNumber = "TRV-{$code}"; // Ex: TRV-X7KP9M12
+            
+        // O loop só repete se, por um milagre, esse código já existir no banco
+        } while (TravelOrder::where('order_number', $orderNumber)->exists());
+
+        return $orderNumber;
+    }
+
+    public function updateStatus(TravelOrder $order, TravelOrderStatus $newStatus): TravelOrder
     {
         return DB::transaction(function () use ($order, $newStatus) {
             

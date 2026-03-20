@@ -10,7 +10,8 @@ class TravelOrderResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->id, 
+            'order_number' => $this->order_number,            
             'requester_name' => $this->user->name,
             'origin' => $this->origin,
             'destination' => $this->destination,
