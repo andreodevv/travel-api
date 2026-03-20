@@ -2,9 +2,9 @@ name: Run Tests
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
 
 jobs:
   test:
@@ -22,6 +22,12 @@ jobs:
     - name: Install Dependencies
       run: composer update -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
       
+    - name: Generate App Key
+      run: php artisan key:generate
+
+    - name: Generate JWT Secret
+      run: php artisan jwt:secret --force
+
     - name: Execute tests via PHPUnit
       env:
         DB_CONNECTION: sqlite
