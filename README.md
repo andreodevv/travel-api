@@ -1,8 +1,8 @@
-# Corporate Travel API - Desafio Técnico
+# Travel API
 
 Microsserviço desenvolvido em **Laravel 13** para gestão de pedidos de viagem corporativa, expondo uma API RESTful completa e segura com foco em alta coesão e arquitetura profissional.
 
-## 🏗️ Arquitetura e Decisões de Design
+## Arquitetura e Decisões de Design
 
 Para garantir uma aplicação escalável e de fácil manutenção, utilizei padrões de **Clean Code** e **SOLID**:
 
@@ -15,7 +15,7 @@ Para garantir uma aplicação escalável e de fácil manutenção, utilizei padr
 
 ---
 
-## 🚀 Como Executar o Projeto Localmente
+## Como Executar o Projeto Localmente
 
 Este projeto utiliza o **Laravel Sail (Docker)** e um **Makefile** para automatizar toda a infraestrutura.
 
@@ -24,9 +24,9 @@ Este projeto utiliza o **Laravel Sail (Docker)** e um **Makefile** para automati
 * Make (instalado nativamente na maioria dos sistemas Linux/macOS ou via WSL no Windows)
 
 ### 1. Setup Automatizado (O "One Command" Setup)
-Clone o repositório e, dentro da pasta do projeto, execute o comando abaixo. Ele irá criar o `.env`, instalar dependências via container temporário, subir os serviços, gerar chaves (Application e JWT) e popular o banco de dados:
+Clone o repositório e, dentro da pasta do projeto, execute o comando **make setup**. Ele irá criar o `.env`, instalar dependências via container temporário, subir os serviços, gerar chaves (Application e JWT) e popular o banco de dados:
 
-make setup
+**make setup**
 
 ### 2. Credenciais de Teste (Seeders)
 O banco de dados já vem populado com dois perfis para validação das regras de negócio:
@@ -38,24 +38,24 @@ Usuário Comum   | user@email.com    | password | Cria pedidos e visualiza apena
 
 ---
 
-## 🧪 Testes Automatizados
+## Testes Automatizados
 
 A suíte de testes cobre o "Caminho Feliz" (Happy Path), validações de formulário (FormRequests), políticas de acesso, filtros de data e disparo de notificações:
 
-make test
+**make test**
 
 ---
 
-## 📬 Postman & Documentação
+## Postman & Documentação
 
-Na raiz do projeto, você encontrará a pasta `/postman` contendo o arquivo `Travel_API_Final.json`. 
+Na raiz do projeto, você encontrará a pasta `/postman` contendo o arquivo `travel-api.json`. 
 * A collection já utiliza **Bearer Token** via variáveis de coleção.
-* Ao realizar o Login, o token JWT é capturado automaticamente via script de teste e aplicado em todas as outras requisições da pasta.
+* Ao realizar o Login, o **token JWT** é capturado automaticamente via script de teste e aplicado em todas as outras requisições da pasta.
 * Os endpoints de consulta e status utilizam **Path Variables** (`:travel_order_id`) para facilitar a troca de IDs durante os testes.
 
 ---
 
-## 🛠️ Comandos Úteis do Makefile
+## Comandos Úteis do Makefile
 
 * make up : Sobe os containers em background.
 * make down : Para os serviços.
@@ -65,7 +65,7 @@ Na raiz do projeto, você encontrará a pasta `/postman` contendo o arquivo `Tra
 
 ---
 
-### 💡 Dica para o Avaliador (Conexão com Banco)
+### Dica para o Avaliador (Conexão com Banco)
 Para conectar no banco de dados via ferramenta externa (DBeaver, TablePlus, etc):
 * **Host**: `localhost` | **Porta**: `3306` (ou `33060` caso a 3306 esteja ocupada)
 * **User/Pass**: `sail` / `password` | **Database**: `travel_api`
