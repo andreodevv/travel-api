@@ -2,9 +2,9 @@ name: Run Tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
 
 jobs:
   test:
@@ -17,15 +17,13 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3'
+        extensions: mbstring, dom, fileinfo, sqlite, pdo_sqlite
         
-    - name: Copy .env
-      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
-      
     - name: Install Dependencies
       run: composer update -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
       
-    - name: Generate key
-      run: php artisan key:generate
-      
     - name: Execute tests via PHPUnit
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: ":memory:"
       run: php artisan test
