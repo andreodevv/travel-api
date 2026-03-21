@@ -68,19 +68,14 @@ class TravelOrderService
                 throw new InvalidOrderTransitionException('Não é possível cancelar um pedido já aprovado.');
             }
 
-            $order->update(['status' => $newStatus]);
+            // Atualizando o status para cancelado/aprovado e salvando a data/hora da atualização.
+            $order->update([
+                'status' => $newStatus, 
+                'processed_at' => now()
+            ]);
 
             // Notificação assíncrona para o solicitante.
             $order->user->notify(new OrderStatusChangedNotification($order));
-
-            Log::info("Status de pedido de viagem atualizado.", [
-                'order_id' => $order->id,
-                'order_number' => $order->order_number,
-                'old_status' => $order->getOriginal('status'),
-                'new_status' => $newStatus->value,
-                'updated_by' => auth()->id(),
-                'ip_address' => request()->ip()
-            ]);
             
             return $order;
         });

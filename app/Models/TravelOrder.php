@@ -66,6 +66,7 @@ class TravelOrder extends Model implements Auditable
         'departure_date',
         'return_date',
         'status',
+        'processed_at'
     ];
 
     /**
@@ -86,6 +87,7 @@ class TravelOrder extends Model implements Auditable
         'status' => TravelOrderStatus::class,
         'departure_date' => 'date',
         'return_date' => 'date',
+        'processed_at' => 'datetime'
     ];
 
     // =========================================================================

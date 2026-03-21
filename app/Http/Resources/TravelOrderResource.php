@@ -39,8 +39,10 @@ class TravelOrderResource extends JsonResource
             'departure_date' => $this->departure_date->format('Y-m-d'),
             'return_date' => $this->return_date ? $this->return_date->format('Y-m-d') : null, 
             
-            // Estado e Metadados
+            // Status  
             'status' => $this->status->value,
+            'processed_at' => $this->processed_at?->toIso8601String(),
+
             'created_at' => $this->created_at->toDateTimeString(),
         ];
     }

@@ -27,6 +27,7 @@ return new class extends Migration
             
             // Status gerenciado via Enum no PHP
             $table->string('status')->comment('Estado do fluxo: solicitado, aprovado ou cancelado');
+            $table->timestamp('processed_at')->nullable()->comment('Data/Hora em que o pedido saiu do estado solicitado (Aprovação ou Cancelamento)');
 
             $table->timestamps();
             $table->softDeletes()->comment('Rastro para auditoria de pedidos excluídos');

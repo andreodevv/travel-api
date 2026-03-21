@@ -61,6 +61,7 @@ class TravelOrderTest extends TestCase
                 'departure_date',
                 'return_date',
                 'status',
+                'processed_at',
                 'created_at'
             ]
         ]);
@@ -305,6 +306,27 @@ class TravelOrderTest extends TestCase
         ]);
 
         $response->assertStatus(422); 
+    }
+
+    /**
+     * Valida que o campo processed_at é preenchido automaticamente na transição de status.
+     * @test
+     */
+    public function test_processed_at_is_filled_when_status_is_updated_by_admin(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $order = TravelOrder::factory()->create(['status' => TravelOrderStatus::REQUESTED]);
+
+        $this->assertNull($order->processed_at);
+
+        $this->actingAs($admin, 'api')->patchJson("/api/v1/travel-orders/{$order->id}/status", [
+            'status' => 'aprovado'
+        ]);
+
+        $order->refresh();
+        $this->assertNotNull($order->processed_at);
+        // Garante que a data gravada é a de "agora" (margem de 1 segundo para o DB)
+        $this->assertEquals(now()->toDateTimeString(), $order->processed_at->toDateTimeString());
     }
 
     // =========================================================================
