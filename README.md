@@ -6,10 +6,11 @@ Microsserviço desenvolvido em Laravel 13 (PHP 8.4) para gestão de pedidos de v
 
 Além do escopo básico de um CRUD, este projeto implementa práticas de nível Sênior/Tech Lead para garantir segurança, performance e facilidade de manutenção:
 
+* Documentação Viva (Swagger/OpenAPI): Geração automática de documentação interativa da API utilizando o pacote Scramble. A documentação lê nativamente os FormRequests e Resources, mantendo o contrato de dados sempre atualizado com o código.
 * Compliance e Auditoria (Event Sourcing Lite): Implementação do pacote laravel-auditing para registrar o histórico imutável de alterações (Antes/Depois) de cada pedido. Criado um endpoint dedicado (/audits) que expõe uma Timeline do pedido, identificando autor, IP e data da ação. O acesso a este log é restrito a Administradores via Policies.
 * Domain Exceptions Customizadas: O projeto não mascara falhas com blocos try/catch genéricos no Controller. Regras de negócio quebradas lançam exceções específicas (ex: InvalidOrderTransitionException), que o framework intercepta na camada de formatação e devolve como um JSON estruturado (HTTP 422), mantendo os Controllers enxutos.
 * Dicionário de Dados Embutido: As Migrations utilizam o método ->comment() nativo do banco de dados, documentando a finalidade de cada coluna diretamente no motor do banco (MySQL/PostgreSQL), facilitando a vida de DBAs e auditores de dados.
-* Health Check Endpoint: A rota raiz (/) foi transformada em um endpoint de monitoramento de infraestrutura (Headless API), retornando dados vitais da API (versão, framework, timestamp ISO8601) para integração com ferramentas como AWS Route53 ou UptimeRobot.
+* Health Check Endpoint: A rota raiz (/) foi transformada em um endpoint de monitoramento de infraestrutura (Headless API), retornando dados vitais da API (versão, framework, timestamp) para integração com ferramentas como AWS Route53 ou UptimeRobot.
 * Desacoplamento de Rotas: Utilização intensiva de rotas nomeadas (->name() e ->as('api.v1.')) em todo o sistema. Isso garante que mudanças futuras nas URLs não quebrem testes ou lógicas internas que dependem da geração de links.
 * Developer Experience (DX) no Postman: A collection do Postman não é apenas um dump de rotas. Ela contém um Pre-request Script automatizado no endpoint de Login que captura o JWT gerado e o injeta como variável global, autenticando todas as rotas subsequentes instantaneamente.
 
@@ -27,11 +28,11 @@ O sistema foi desenhado para simular um fluxo real de aprovação corporativa. O
 
 Para garantir uma aplicação escalável, a arquitetura foi desenhada com base em padrões de Clean Code e separação de responsabilidades:
 
-* Identificadores Seguros (ULID): Substituição do auto-incremento padrão por ULIDs na chave primária. Garante ordenação cronológica nativa, melhora a performance em bancos distribuídos e evita a vulnerabilidade de IDOR (Insecure Direct Object Reference).
-* Business Keys & Route Binding: Implementação de um order_number amigável (ex: TRV-ABC1234). O Route Model Binding foi sobrescrito para que a API resolva o recurso de forma transparente, aceitando tanto o ULID técnico quanto a Business Key na mesma URL.
-* Service Pattern: Centraliza as regras de negócio complexas e transições de estado dentro de Database Transactions (DB::transaction), garantindo integridade e mantendo os Controllers focados apenas no transporte HTTP.
-* Autenticação Stateless (JWT) e Rate Limiting: JSON Web Tokens para garantir escalabilidade horizontal. As rotas sensíveis contam com o middleware throttle configurado para prevenir ataques de Brute Force (no login) e DoS.
-* Strict Types e API Resources: Todo o código PHP utiliza declare(strict_types=1) e docblocks @mixin para blindar a tipagem. Os Resources atuam como DTOs de saída, garantindo que o contrato da API (JSON) não mude acidentalmente se a estrutura do banco for alterada.
+* Identificadores Seguros (ULID): Substituição do auto-incremento padrão por ULIDs na chave primária. Garante ordenação cronológica nativa, melhora a performance em bancos distribuídos e evita a vulnerabilidade de IDOR.
+* Business Keys & Route Binding: Implementação de um order_number amigável (ex: TRV-ABC1234). O Route Model Binding foi sobrescrito para que a API resolva o recurso de forma transparente.
+* Service Pattern: Centraliza as regras de negócio complexas e transições de estado dentro de Database Transactions (DB::transaction).
+* Autenticação Stateless (JWT) e Rate Limiting: JSON Web Tokens para escalabilidade horizontal. Rotas sensíveis contam com o middleware throttle contra ataques de Brute Force.
+* Strict Types e API Resources: Todo o código PHP utiliza declare(strict_types=1). Os Resources atuam como DTOs de saída.
 
 ## Integração Contínua (CI/CD)
 
@@ -61,11 +62,17 @@ ________________|_________________|__________|__________________________________
 Administrador   | admin@email.com | password | Aprova/cancela pedidos, ve todos usuarios e auditoria.
 Usuario Comum   | user@email.com  | password | Cria pedidos e ve estritamente os proprios registros.
 
+## Documentação Interativa da API (Swagger)
+
+A API possui uma documentação OpenAPI gerada dinamicamente. Após subir os containers, você pode explorar e testar os endpoints diretamente pelo navegador acessando:
+
+http://localhost/docs/api
+
 ## Testes Automatizados e Alta Performance
 
 A aplicação possui 100% de cobertura nos fluxos críticos. 
-* Time Travel Testing: Para testes de integração assíncronos e auditoria, utilizamos manipulação temporal nativa do Laravel (Time Travel) para evitar colisões de timestamp criadas pela execução em milissegundos, garantindo ordenação cronológica estrita nos asserts de banco.
-* Testes Unitários Puros: A máquina de estados (Enum TravelOrderStatus) possui testes unitários que rodam sem realizar o bootstrap do framework, focando estritamente na lógica do domínio.
+* Time Travel Testing: Para testes de integração assíncronos e auditoria, utilizamos manipulação temporal nativa do Laravel (Time Travel) para evitar colisões de timestamp.
+* Testes Unitários Puros: A máquina de estados (Enum TravelOrderStatus) possui testes unitários que rodam sem realizar o bootstrap do framework.
 
 Para executar a suíte localmente:
 make test
