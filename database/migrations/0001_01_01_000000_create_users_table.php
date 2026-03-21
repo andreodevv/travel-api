@@ -9,16 +9,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->ulid('id')->primary(); 
+            // Usamos ULID para evitar exposição de IDs sequenciais e facilitar a portabilidade
+            $table->ulid('id')->primary()->comment('Identificador único global (ULID)');
             
-            $table->string('name');
-            $table->string('email')->unique();
+            $table->string('name')->comment('Nome completo do colaborador');
+            $table->string('email')->unique()->comment('E-mail corporativo (único)');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->boolean('is_admin')->default(false);
+            
+            // Controle de Acesso (ACL)
+            $table->boolean('is_admin')->default(false)
+                ->comment('Flag de privilégio: true = Administrador, false = Solicitante');
+
             $table->rememberToken();
             $table->timestamps();
-            $table->softDeletes();
+            $table->softDeletes()->comment('Data de desativação da conta (Soft Delete)');
+
+            $table->comment('Tabela de usuários e gestores do sistema de viagens.');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

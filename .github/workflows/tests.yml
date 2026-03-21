@@ -1,3 +1,11 @@
+# =============================================================================
+# WORKFLOW: Pipeline de Testes Automatizados (CI)
+# =============================================================================
+# Este workflow garante a integridade do código a cada Push ou Pull Request.
+# Ele prepara um ambiente isolado, instala dependências e executa a suíte
+# completa de testes (Unitários e de Feature) usando SQLite em memória.
+# =============================================================================
+
 name: Run Tests
 
 on:
@@ -11,26 +19,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Checkout do código-fonte
     - uses: actions/checkout@v4
     
+    # 2. Setup do ambiente PHP com extensões necessárias para o Laravel
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3'
         extensions: mbstring, dom, fileinfo, sqlite, pdo_sqlite
         
+    # 3. Preparação do ambiente (O Laravel exige um .env para rodar comandos Artisan)
     - name: Copy .env
       run: php -r "file_exists('.env') || copy('.env.example', '.env');"
 
+    # 4. Instalação de dependências via Composer (Otimizado para CI)
     - name: Install Dependencies
       run: composer update -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
       
+    # 5. Geração de chaves de segurança (Essenciais para criptografia e JWT)
     - name: Generate App Key
       run: php artisan key:generate
 
     - name: Generate JWT Secret
       run: php artisan jwt:secret --force
 
+    # 6. Execução da suíte de testes
+    # Usamos DB_CONNECTION=sqlite e DB_DATABASE=:memory: para máxima performance,
+    # garantindo que o banco de dados seja destruído e recriado a cada teste.
     - name: Execute tests via PHPUnit
       env:
         DB_CONNECTION: sqlite

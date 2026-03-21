@@ -1,15 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Models\TravelOrder;
 use App\Enums\TravelOrderStatus;
+use App\Exceptions\InvalidOrderTransitionException;
 use App\Notifications\OrderStatusChangedNotification;
 use Illuminate\Support\Facades\DB;
-use Exception;
-
+use Illuminate\Support\Facades\Log;
+/**
+ * Class TravelOrderService
+ * * Orquestra a lógica de negócio para pedidos de viagem.
+ * Garante a integridade dos dados, geração de identificadores de negócio 
+ * e o disparo de efeitos colaterais (notificações/transações).
+ */
 class TravelOrderService
 {
+    /**
+     * Cria um novo registro de pedido de viagem.
+     * * @param array $data Dados validados do pedido.
+     * @param string $userId Identificador ULID do usuário solicitante.
+     * @return TravelOrder Instância do pedido persistida.
+     */
     public function create(array $data, string $userId): TravelOrder
     {
         $data['user_id'] = $userId;        
@@ -19,38 +33,55 @@ class TravelOrderService
     }
 
     /**
-     * Gera um número de pedido curto, legível e absolutamente único.
+     * Gera um identificador de pedido (Business Key) amigável e único.
+     * * Utiliza um alfabeto Base32 customizado (Safe Alphabet) para remover 
+     * caracteres visualmente ambíguos (0, O, 1, I, L), facilitando a 
+     * comunicação verbal entre usuário e suporte.
+     * * @return string Ex: TRV-X7KP9M2B
      */
     private function generateUniqueOrderNumber(): string
     {
-        // Alfabeto seguro: sem 0, O, 1, I, L para evitar confusão visual
         $safeAlphabet = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
         
         do {
-            // Pega 8 caracteres aleatórios do nosso alfabeto seguro
             $code = substr(str_shuffle($safeAlphabet), 0, 8);
-            $orderNumber = "TRV-{$code}"; // Ex: TRV-X7KP9M12
+            $orderNumber = "TRV-{$code}";
             
-        // O loop só repete se, por um milagre, esse código já existir no banco
         } while (TravelOrder::where('order_number', $orderNumber)->exists());
 
         return $orderNumber;
     }
 
+    /**
+     * Atualiza o status do pedido garantindo atomicidade.
+     * * @param TravelOrder $order Instância do pedido a ser atualizado.
+     * @param TravelOrderStatus $newStatus Novo estado desejado.
+     * @return TravelOrder Instância atualizada.
+     * @throws Exception Caso a regra de transição de status seja violada.
+     */
     public function updateStatus(TravelOrder $order, TravelOrderStatus $newStatus): TravelOrder
     {
         return DB::transaction(function () use ($order, $newStatus) {
             
-            // Regra do Teste: Se for cancelar, verificar se já não foi aprovado
+            // Validação de Regra de Negócio: Pedidos aprovados são imutáveis para cancelamento.
             if ($newStatus === TravelOrderStatus::CANCELED && !$order->canBeCanceled()) {
-                throw new Exception("Não é possível cancelar um pedido já aprovado.");
+                throw new InvalidOrderTransitionException('Não é possível cancelar um pedido já aprovado.');
             }
 
             $order->update(['status' => $newStatus]);
 
-            // Dispara a notificação para o dono do pedido (DESCOMENTE ESTA LINHA)
+            // Notificação assíncrona para o solicitante.
             $order->user->notify(new OrderStatusChangedNotification($order));
 
+            Log::info("Status de pedido de viagem atualizado.", [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'old_status' => $order->getOriginal('status'),
+                'new_status' => $newStatus->value,
+                'updated_by' => auth()->id(),
+                'ip_address' => request()->ip()
+            ]);
+            
             return $order;
         });
     }

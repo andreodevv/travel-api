@@ -1,25 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
-use App\Models\TravelOrder;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Class User
+ * @property string $id
+ * @property string $name
+ * @property string $email
+ * @property bool $is_admin
+ */
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes, HasUlids;
 
-    /**
-     * Atributos preenchíveis.
-     */
+    // =========================================================================
+    // CONFIGURAÇÕES E ATRIBUTOS
+    // =========================================================================
+
     protected $fillable = [
         'name',
         'email',
@@ -27,27 +36,26 @@ class User extends Authenticatable implements JWTSubject
         'is_admin',
     ];
 
-    /**
-     * Atributos ocultos em serialização (JSON).
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
     /**
-     * Casts de tipos.
+     * Define as conversões de tipos (Laravel 11+ style).
      */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'is_admin' => 'boolean', // Garante que venha como true/false, não 1/0
+            'is_admin' => 'boolean',
         ];
     }
 
-    // --- Relacionamentos ---
+    // =========================================================================
+    // RELACIONAMENTOS
+    // =========================================================================
 
     /**
      * Um usuário possui muitos pedidos de viagem.
@@ -57,19 +65,18 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(TravelOrder::class);
     }
 
-    // --- Métodos Requeridos pelo JWT ---
+    // =========================================================================
+    // MÉTODOS JWT (Autenticação Stateless)
+    // =========================================================================
 
-    /**
-     * Identificador que será armazenado no "subject" do token.
-     */
-    public function getJWTIdentifier()
+    public function getJWTIdentifier(): mixed
     {
         return $this->getKey();
     }
 
     /**
-     * Claims personalizadas para o payload do token.
-     * Útil para injetar se o usuário é admin diretamente no token, se quiser.
+     * Claims personalizadas no payload do token.
+     * Incluímos o status de admin para facilitar verificações no Front-end sem novas queries.
      */
     public function getJWTCustomClaims(): array
     {

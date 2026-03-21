@@ -1,7 +1,7 @@
 {
    "info":{
       "name":"Travel Corporate API - Final",
-      "description":"Collection completa com filtros avançados, suporte a ULID e Order Number.",
+      "description":"Collection completa com filtros avançados, suporte a ULID, Order Number, Timeline de Auditoria e Versionamento (v1).",
       "schema":"https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
    },
    "item":[
@@ -40,12 +40,13 @@
                      }
                   },
                   "url":{
-                     "raw":"{{base_url}}/api/login",
+                     "raw":"{{base_url}}/api/v1/login",
                      "host":[
                         "{{base_url}}"
                      ],
                      "path":[
                         "api",
+                        "v1",
                         "login"
                      ]
                   }
@@ -76,12 +77,13 @@
                            }
                         },
                         "url":{
-                           "raw":"{{base_url}}/api/travel-orders/:travel_order_id/status",
+                           "raw":"{{base_url}}/api/v1/travel-orders/:travel_order_id/status",
                            "host":[
                               "{{base_url}}"
                            ],
                            "path":[
                               "api",
+                              "v1",
                               "travel-orders",
                               ":travel_order_id",
                               "status"
@@ -113,12 +115,13 @@
                            }
                         },
                         "url":{
-                           "raw":"{{base_url}}/api/travel-orders/:travel_order_id/status",
+                           "raw":"{{base_url}}/api/v1/travel-orders/:travel_order_id/status",
                            "host":[
                               "{{base_url}}"
                            ],
                            "path":[
                               "api",
+                              "v1",
                               "travel-orders",
                               ":travel_order_id",
                               "status"
@@ -132,9 +135,39 @@
                            ]
                         }
                      }
+                  },
+                  {
+                     "name":"Consultar Timeline de Auditoria",
+                     "request":{
+                        "method":"GET",
+                        "header":[
+                           
+                        ],
+                        "url":{
+                           "raw":"{{base_url}}/api/v1/travel-orders/:travel_order_id/audits",
+                           "host":[
+                              "{{base_url}}"
+                           ],
+                           "path":[
+                              "api",
+                              "v1",
+                              "travel-orders",
+                              ":travel_order_id",
+                              "audits"
+                           ],
+                           "variable":[
+                              {
+                                 "key":"travel_order_id",
+                                 "value":"TRV-X7KP9M2B",
+                                 "description":"Pode ser o ULID ou o Número do Pedido (TRV-XXXXXXXX)"
+                              }
+                           ]
+                        },
+                        "description":"Recupera o histórico completo de alterações do pedido (Timeline). \n\n**Diferencial Onfly:** Acesso exclusivo para administradores, garantindo compliance, segurança e rastreabilidade total de ações de usuários no sistema."
+                     }
                   }
                ],
-               "description":"Ações restritas a administradores"
+               "description":"Ações restritas a administradores e gestores."
             },
             {
                "name":"Listar Pedidos (Filtros Avançados)",
@@ -144,12 +177,13 @@
                      
                   ],
                   "url":{
-                     "raw":"{{base_url}}/api/travel-orders?status=solicitado&origin=Belo&destination=Floripa&start_date=2026-01-01&end_date=2026-12-31&search=Andre",
+                     "raw":"{{base_url}}/api/v1/travel-orders?status=solicitado&origin=Belo&destination=Floripa&start_date=2026-01-01&end_date=2026-12-31&search=Andre",
                      "host":[
                         "{{base_url}}"
                      ],
                      "path":[
                         "api",
+                        "v1",
                         "travel-orders"
                      ],
                      "query":[
@@ -205,12 +239,13 @@
                      }
                   },
                   "url":{
-                     "raw":"{{base_url}}/api/travel-orders",
+                     "raw":"{{base_url}}/api/v1/travel-orders",
                      "host":[
                         "{{base_url}}"
                      ],
                      "path":[
                         "api",
+                        "v1",
                         "travel-orders"
                      ]
                   }
@@ -224,12 +259,13 @@
                      
                   ],
                   "url":{
-                     "raw":"{{base_url}}/api/travel-orders/:travel_order_id",
+                     "raw":"{{base_url}}/api/v1/travel-orders/:travel_order_id",
                      "host":[
                         "{{base_url}}"
                      ],
                      "path":[
                         "api",
+                        "v1",
                         "travel-orders",
                         ":travel_order_id"
                      ],
