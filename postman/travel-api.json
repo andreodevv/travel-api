@@ -1,7 +1,7 @@
 {
    "info":{
-      "name":"Travel Corporate API - Final",
-      "description":"Collection completa com filtros avançados, suporte a ULID, Order Number, Timeline de Auditoria e Versionamento (v1).",
+      "name":"Travel API",
+      "description":"Collection completa com Autenticação JWT, Me, Logout e Gestão de Pedidos de Viagem. Inclui Order Numbers dinâmicos e Timeline de Auditoria.",
       "schema":"https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
    },
    "item":[
@@ -32,7 +32,7 @@
                   ],
                   "body":{
                      "mode":"raw",
-                     "raw":"{\n    // Credenciais do Seeder:\n    // Admin: admin@email.com / password\n    // Usuário: user@email.com / password\n    \"email\": \"admin@email.com\",\n    \"password\": \"password\"\n}",
+                     "raw":"{\n    \"email\": \"admin@email.com\",\n    \"password\": \"password\"\n}",
                      "options":{
                         "raw":{
                            "language":"json"
@@ -51,8 +51,60 @@
                      ]
                   }
                }
+            },
+            {
+               "name":"Me (Perfil do Usuário)",
+               "request":{
+                  "method":"GET",
+                  "header":[
+                     
+                  ],
+                  "url":{
+                     "raw":"{{base_url}}/api/v1/me",
+                     "host":[
+                        "{{base_url}}"
+                     ],
+                     "path":[
+                        "api",
+                        "v1",
+                        "me"
+                     ]
+                  },
+                  "description":"Recupera os dados do usuário autenticado no formato UserResource, expondo DTO de permissões."
+               }
+            },
+            {
+               "name":"Logout",
+               "request":{
+                  "method":"POST",
+                  "header":[
+                     
+                  ],
+                  "url":{
+                     "raw":"{{base_url}}/api/v1/logout",
+                     "host":[
+                        "{{base_url}}"
+                     ],
+                     "path":[
+                        "api",
+                        "v1",
+                        "logout"
+                     ]
+                  },
+                  "description":"Invalida o token JWT atual no servidor, bloqueando chamadas subsequentes com o mesmo token."
+               }
             }
-         ]
+         ],
+         "auth":{
+            "type":"bearer",
+            "bearer":[
+               {
+                  "key":"token",
+                  "value":"{{jwt_token}}",
+                  "type":"string"
+               }
+            ]
+         }
       },
       {
          "name":"1. Pedidos de Viagem",
@@ -91,8 +143,7 @@
                            "variable":[
                               {
                                  "key":"travel_order_id",
-                                 "value":"TRV-X7KP9M2B",
-                                 "description":"Pode ser o ULID ou o Número do Pedido (TRV-XXXXXXXX)"
+                                 "value":"TRV-X7KP9M2B"
                               }
                            ]
                         }
@@ -129,8 +180,7 @@
                            "variable":[
                               {
                                  "key":"travel_order_id",
-                                 "value":"TRV-X7KP9M2B",
-                                 "description":"Pode ser o ULID ou o Número do Pedido (TRV-XXXXXXXX)"
+                                 "value":"TRV-X7KP9M2B"
                               }
                            ]
                         }
@@ -158,16 +208,13 @@
                            "variable":[
                               {
                                  "key":"travel_order_id",
-                                 "value":"TRV-X7KP9M2B",
-                                 "description":"Pode ser o ULID ou o Número do Pedido (TRV-XXXXXXXX)"
+                                 "value":"TRV-X7KP9M2B"
                               }
                            ]
-                        },
-                        "description":"Recupera o histórico completo de alterações do pedido (Timeline). \n\n**Diferencial Onfly:** Acesso exclusivo para administradores, garantindo compliance, segurança e rastreabilidade total de ações de usuários no sistema."
+                        }
                      }
                   }
-               ],
-               "description":"Ações restritas a administradores e gestores."
+               ]
             },
             {
                "name":"Listar Pedidos (Filtros Avançados)",
@@ -177,7 +224,7 @@
                      
                   ],
                   "url":{
-                     "raw":"{{base_url}}/api/v1/travel-orders?status=solicitado&origin=Belo&destination=Floripa&start_date=2026-01-01&end_date=2026-12-31&search=Andre",
+                     "raw":"{{base_url}}/api/v1/travel-orders?status=solicitado",
                      "host":[
                         "{{base_url}}"
                      ],
@@ -189,37 +236,10 @@
                      "query":[
                         {
                            "key":"status",
-                           "value":"solicitado",
-                           "description":"solicitado, aprovado ou cancelado"
-                        },
-                        {
-                           "key":"origin",
-                           "value":"Belo",
-                           "description":"Busca parcial por origem"
-                        },
-                        {
-                           "key":"destination",
-                           "value":"Floripa",
-                           "description":"Busca parcial por destino"
-                        },
-                        {
-                           "key":"start_date",
-                           "value":"2026-01-01",
-                           "description":"Data de ida inicial (Y-m-d)"
-                        },
-                        {
-                           "key":"end_date",
-                           "value":"2026-12-31",
-                           "description":"Data de ida final (Y-m-d)"
-                        },
-                        {
-                           "key":"search",
-                           "value":"Andre",
-                           "description":"Busca global (nome, origem ou destino)"
+                           "value":"solicitado"
                         }
                      ]
-                  },
-                  "description":"Se logado como admin, mostra tudo. Se usuário comum, mostra apenas os próprios."
+                  }
                }
             },
             {
@@ -272,8 +292,7 @@
                      "variable":[
                         {
                            "key":"travel_order_id",
-                           "value":"TRV-X7KP9M2B",
-                           "description":"Insira o ULID ou o Order Number"
+                           "value":"TRV-X7KP9M2B"
                         }
                      ]
                   }

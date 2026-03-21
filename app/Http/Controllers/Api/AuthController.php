@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
-
 /**
  * Class AuthController
  * * Centraliza o fluxo de autenticação stateless via JWT (JSON Web Token).
@@ -39,12 +39,18 @@ class AuthController extends Controller
     }
 
     /**
-     * Recupera o perfil do usuário autenticado a partir do Bearer Token enviado.
-     * * @return JsonResponse Dados completos do modelo User autenticado.
+     * Recupera o perfil do usuário autenticado a partir do Bearer Token.
+     * * O retorno é encapsulado em um UserResource para blindar a aplicação contra 
+     * o vazamento de colunas sensíveis do banco de dados e injetar as permissões de acesso.
+     *
+     * @return UserResource
      */
-    public function me(): JsonResponse
+    public function me(): UserResource
     {
-        return response()->json(Auth::guard('api')->user());
+        /** @var \App\Models\User $user */
+        $user = Auth::guard('api')->user();
+
+        return new UserResource($user);
     }
 
     /**
@@ -55,7 +61,7 @@ class AuthController extends Controller
     {
         Auth::guard('api')->logout();
 
-        return response()->json(['message' => 'Successfully logged out']);
+        return response()->json(['message' => 'Sessão encerrada com sucesso.']);
     }
 
     /**

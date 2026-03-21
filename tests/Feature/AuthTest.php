@@ -85,4 +85,76 @@ class AuthTest extends TestCase
         
         $response->assertJsonValidationErrors(['email', 'password']);
     }
+
+    // =========================================================================
+    // BLOCO 2: PERFIL DO USUÁRIO (/me) E CONTRATO DE DADOS
+    // =========================================================================
+
+    /**
+     * Valida o "Caminho Feliz" do /me.
+     * Engenharia: Garante que o DTO (UserResource) não seja quebrado no futuro.
+     * O Front-end depende estritamente dessa estrutura para o Pinia funcionar.
+     * @test
+     */
+    public function test_authenticated_user_can_fetch_their_profile_and_respects_resource_contract(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'admin@email.com' // Usamos o e-mail que define o is_admin no Resource
+        ]);
+
+        // Simula uma requisição autenticada com o token JWT
+        $response = $this->actingAs($user, 'api')->getJson('/api/v1/me');
+
+        $response->assertStatus(200);
+        
+        // Padrão Ouro: Validar a tipagem/estrutura de saída. 
+        // Note que o Laravel empacota Resources dentro da chave 'data'.
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'name',
+                'email',
+                'permissions' => [
+                    'is_admin'
+                ],
+                'created_at'
+            ]
+        ]);
+        
+        // Validação adicional de regra de negócio
+        $response->assertJsonPath('data.permissions.is_admin', true);
+    }
+
+    /**
+     * Trava de Segurança: Valida se o Middleware auth:api está bloqueando intrusos.
+     * @test
+     */
+    public function test_unauthenticated_user_cannot_access_me_route(): void
+    {
+        // Requisição SEM o token
+        $response = $this->getJson('/api/v1/me');
+
+        $response->assertStatus(401);
+    }
+
+    // =========================================================================
+    // BLOCO 3: ENCERRAMENTO DE SESSÃO (/logout)
+    // =========================================================================
+
+    /**
+     * Valida se a rota de logout encerra a sessão e retorna o HTTP Status correto.
+     * @test
+     */
+    public function test_authenticated_user_can_logout(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user, 'api')->postJson('/api/v1/logout');
+
+        $response->assertStatus(200);
+        
+        $response->assertJson([
+            'message' => 'Sessão encerrada com sucesso.'
+        ]);
+    }
 }
