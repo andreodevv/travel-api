@@ -41,6 +41,7 @@ class TravelOrderController extends Controller
             })
             ->filter($request->all())
             ->with('user') 
+            ->orderBy('created_at', 'desc')
             ->get();
 
         return TravelOrderResource::collection($orders);
