@@ -1,4 +1,4 @@
-# Travel Corporate API
+# Travel API
 
 Microsserviço desenvolvido em Laravel 13 (PHP 8.4) para gestão de pedidos de viagem corporativa. O projeto expõe uma API RESTful (v1) focada em alta coesão, rastreabilidade e arquitetura sustentável, requisitos indispensáveis para plataformas SaaS de gestão de despesas.
 
@@ -8,6 +8,7 @@ Além do escopo básico de um CRUD, este projeto implementa práticas de nível 
 
 * Documentação Viva (Swagger/OpenAPI): Geração automática de documentação interativa da API utilizando o pacote Scramble. A documentação lê nativamente os FormRequests e Resources, mantendo o contrato de dados sempre atualizado com o código.
 * Compliance e Auditoria (Event Sourcing Lite): Implementação do pacote laravel-auditing para registrar o histórico imutável de alterações (Antes/Depois) de cada pedido. Criado um endpoint dedicado (/audits) que expõe uma Timeline do pedido, identificando autor, IP e data da ação. O acesso a este log é restrito a Administradores via Policies.
+* State Guard (Trava de Estado Segura): Implementação rigorosa de bloqueios de edição. O sistema permite que o usuário atualize seu pedido para corrigir erros, mas apenas enquanto estiver no estado inicial ("solicitado"). Tentativas de alterar pedidos processados (Aprovados/Cancelados) são barradas matematicamente pela Policy e pelo Service, garantindo a imutabilidade do histórico.
 * Domain Exceptions Customizadas: O projeto não mascara falhas com blocos try/catch genéricos no Controller. Regras de negócio quebradas lançam exceções específicas (ex: InvalidOrderTransitionException), que o framework intercepta na camada de formatação e devolve como um JSON estruturado (HTTP 422), mantendo os Controllers enxutos.
 * Dicionário de Dados Embutido: As Migrations utilizam o método ->comment() nativo do banco de dados, documentando a finalidade de cada coluna diretamente no motor do banco (MySQL/PostgreSQL), facilitando a vida de DBAs e auditores de dados.
 * Health Check Endpoint: A rota raiz (/) foi transformada em um endpoint de monitoramento de infraestrutura (Headless API), retornando dados vitais da API (versão, framework, timestamp) para integração com ferramentas como AWS Route53 ou UptimeRobot.
@@ -20,9 +21,10 @@ O sistema foi desenhado para simular um fluxo real de aprovação corporativa. O
 
 1. Autenticação (JWT): O usuário envia credenciais e recebe um token assinado.
 2. Criação: O usuário comum envia a requisição de viagem. O Controller valida datas e regras via FormRequest. O Service gera o Business Key (TRV-...) e um ULID interno, salvando o status inicial como "solicitado".
-3. Isolamento (Tenant): Ao listar pedidos, o sistema identifica via Token quem está logado. Usuários veem apenas os próprios registros; Admins veem o panorama geral.
-4. Transição de Estado: Um gestor (Admin) avalia o pedido e submete um PATCH alterando o status para "aprovado" ou "cancelado". A Policy barra usuários comuns de tentarem essa ação.
-5. Gatilhos em Background: O sistema grava a ação do Admin na tabela de auditoria e despacha uma notificação assíncrona (via Queue) avisando o usuário sobre a mudança de status.
+3. Edição Segura (Janela de Mutabilidade): Enquanto o pedido estiver pendente ("solicitado"), o usuário pode alterar origem, destino e datas caso tenha errado. Toda alteração é salva na trilha de auditoria.
+4. Isolamento (Tenant): Ao listar pedidos, o sistema identifica via Token quem está logado. Usuários veem apenas os próprios registros; Admins veem o panorama geral.
+5. Transição de Estado: Um gestor (Admin) avalia o pedido e submete um PATCH alterando o status para "aprovado" ou "cancelado", gerando um carimbo de processamento (processed_at) que torna o pedido permanentemente imutável para o solicitante.
+6. Gatilhos em Background: O sistema grava a ação do Admin na tabela de auditoria e despacha uma notificação assíncrona (via Queue) avisando o usuário sobre a mudança de status.
 
 ## Arquitetura e Decisões de Design
 
@@ -60,7 +62,7 @@ O banco inicializa com dois perfis de teste para validação das regras de acess
 Perfil          | E-mail          | Senha    | Permissoes
 ________________|_________________|__________|_______________________________________________________
 Administrador   | admin@email.com | password | Aprova/cancela pedidos, ve todos usuarios e auditoria.
-Usuario Comum   | user@email.com  | password | Cria pedidos e ve estritamente os proprios registros.
+Usuario Comum   | user@email.com  | password | Cria/Edita pedidos e ve estritamente os proprios registros.
 
 ## Documentação Interativa da API (Swagger)
 
