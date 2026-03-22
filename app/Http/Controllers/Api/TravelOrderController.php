@@ -41,7 +41,7 @@ class TravelOrderController extends Controller
             })
             ->filter($request->all())
             ->with('user') 
-            ->paginate();
+            ->get();
 
         return TravelOrderResource::collection($orders);
     }
@@ -55,6 +55,27 @@ class TravelOrderController extends Controller
     {
         $order = $this->service->create($request->validated(), auth()->id());
         
+        return new TravelOrderResource($order);
+    }
+
+    /**
+     * Atualiza os dados de um pedido de viagem pendente.
+     * * Reutilizamos o StoreTravelOrderRequest pois o contrato de dados (payload) é idêntico à criação.
+     *
+     * @param StoreTravelOrderRequest $request
+     * @param TravelOrder $travelOrder
+     * @return TravelOrderResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function update(StoreTravelOrderRequest $request, TravelOrder $travelOrder): TravelOrderResource
+    {
+        // 1. Autorização: A Policy garante que o usuário logado é o dono real deste pedido
+        $this->authorize('update', $travelOrder);
+
+        // 2. Serviço: Aplica a trava de estado e atualiza
+        $order = $this->service->update($travelOrder, $request->validated());
+        
+        // 3. Resposta padronizada
         return new TravelOrderResource($order);
     }
 

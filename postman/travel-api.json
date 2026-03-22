@@ -1,7 +1,7 @@
 {
    "info":{
       "name":"Travel API",
-      "description":"Collection completa com Autenticação JWT, Me, Logout e Gestão de Pedidos de Viagem. Inclui Order Numbers dinâmicos e Timeline de Auditoria.",
+      "description":"Collection completa com Autenticação JWT, Me, Logout e Gestão de Pedidos de Viagem. Inclui Order Numbers dinâmicos, Edição e Timeline de Auditoria.",
       "schema":"https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
    },
    "item":[
@@ -237,6 +237,31 @@
                         {
                            "key":"status",
                            "value":"solicitado"
+                        },
+                        {
+                           "key":"search",
+                           "value":"Andre",
+                           "disabled":true
+                        },
+                        {
+                           "key":"origin",
+                           "value":"São Paulo",
+                           "disabled":true
+                        },
+                        {
+                           "key":"destination",
+                           "value":"Rio de Janeiro",
+                           "disabled":true
+                        },
+                        {
+                           "key":"start_date",
+                           "value":"2026-07-01",
+                           "disabled":true
+                        },
+                        {
+                           "key":"end_date",
+                           "value":"2026-07-31",
+                           "disabled":true
                         }
                      ]
                   }
@@ -269,6 +294,43 @@
                         "travel-orders"
                      ]
                   }
+               }
+            },
+            {
+               "name":"Atualizar Pedido Pendente (PUT)",
+               "request":{
+                  "method":"PUT",
+                  "header":[
+                     
+                  ],
+                  "body":{
+                     "mode":"raw",
+                     "raw":"{\n    \"origin\": \"Curitiba (Ajustado)\",\n    \"destination\": \"São Paulo\",\n    \"departure_date\": \"2026-07-22\",\n    \"return_date\": \"2026-07-28\"\n}",
+                     "options":{
+                        "raw":{
+                           "language":"json"
+                        }
+                     }
+                  },
+                  "url":{
+                     "raw":"{{base_url}}/api/v1/travel-orders/:travel_order_id",
+                     "host":[
+                        "{{base_url}}"
+                     ],
+                     "path":[
+                        "api",
+                        "v1",
+                        "travel-orders",
+                        ":travel_order_id"
+                     ],
+                     "variable":[
+                        {
+                           "key":"travel_order_id",
+                           "value":"TRV-X7KP9M2B"
+                        }
+                     ]
+                  },
+                  "description":"Atualiza um pedido que ainda está no status 'solicitado'. Requer os mesmos campos da criação (origin, destination, departure_date)."
                }
             },
             {

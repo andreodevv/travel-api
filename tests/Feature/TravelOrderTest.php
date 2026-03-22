@@ -130,6 +130,115 @@ class TravelOrderTest extends TestCase
     }
 
     // =========================================================================
+    // BLOCO 1.2: ATUALIZAÇÃO DE PEDIDOS PENDENTES (Update)
+    // =========================================================================
+
+    /**
+     * Valida o "Caminho Feliz": Usuário pode editar seu próprio pedido 
+     * se ele ainda estiver com status "solicitado".
+     * @test
+     */
+    public function test_a_user_can_update_their_own_pending_travel_order(): void
+    {
+        $user = User::factory()->create();
+        $order = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'status' => TravelOrderStatus::REQUESTED,
+            'origin' => 'Origem Antiga'
+        ]);
+
+        $response = $this->actingAs($user, 'api')->putJson("/api/v1/travel-orders/{$order->id}", [
+            'origin' => 'Origem Nova',
+            'destination' => 'Destino Novo',
+            'departure_date' => now()->addDays(10)->format('Y-m-d'),
+        ]);
+
+        $response->assertStatus(200);
+        
+        $this->assertDatabaseHas('travel_orders', [
+            'id' => $order->id,
+            'origin' => 'Origem Nova',
+            'destination' => 'Destino Novo'
+        ]);
+        
+        // Garante que o retorno é o resource atualizado
+        $response->assertJsonPath('data.origin', 'Origem Nova');
+    }
+
+    /**
+     * Trava de Segurança (IDOR): Garante que um usuário não pode 
+     * editar o pedido de outro usuário.
+     * @test
+     */
+    public function test_a_user_cannot_update_someone_elses_travel_order(): void
+    {
+        $hacker = User::factory()->create();
+        $victim = User::factory()->create();
+        
+        $order = TravelOrder::factory()->create([
+            'user_id' => $victim->id,
+            'status' => TravelOrderStatus::REQUESTED,
+        ]);
+
+        $response = $this->actingAs($hacker, 'api')->putJson("/api/v1/travel-orders/{$order->id}", [
+            'origin' => 'Hackeado',
+            'destination' => 'Hackeado',
+            'departure_date' => now()->addDays(2)->format('Y-m-d'),
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Trava de Estado (State Guard): Garante que a Policy bloqueia a edição 
+     * de um pedido que já foi processado (aprovado ou cancelado).
+     * @test
+     */
+    public function test_a_user_cannot_update_a_processed_travel_order(): void
+    {
+        $user = User::factory()->create();
+        
+        $order = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'status' => TravelOrderStatus::APPROVED, // Já aprovado
+        ]);
+
+        $response = $this->actingAs($user, 'api')->putJson("/api/v1/travel-orders/{$order->id}", [
+            'origin' => 'Tentativa de Mudança',
+            'destination' => 'Tentativa',
+            'departure_date' => now()->addDays(2)->format('Y-m-d'),
+        ]);
+
+        // A Policy vai barrar pois status não é "solicitado"
+        $response->assertStatus(403);
+    }
+
+    /**
+     * Valida o FormRequest: Garante que os campos obrigatórios sejam 
+     * validados também na hora da atualização.
+     * @test
+     */
+    public function test_it_validates_required_fields_when_updating(): void
+    {
+        $user = User::factory()->create();
+        
+        $order = TravelOrder::factory()->create([
+            'user_id' => $user->id,
+            'status' => TravelOrderStatus::REQUESTED,
+        ]);
+
+        $response = $this->actingAs($user, 'api')->putJson("/api/v1/travel-orders/{$order->id}", []);
+
+        $response->assertStatus(422);
+        
+        $response->assertJsonValidationErrors([
+            'origin', 
+            'destination', 
+            'departure_date'
+        ]);
+    }
+
+    // =========================================================================
     // BLOCO 2: VISUALIZAÇÃO E AUTORIZAÇÃO (Index & Show)
     // =========================================================================
 

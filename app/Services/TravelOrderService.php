@@ -53,6 +53,31 @@ class TravelOrderService
     }
 
     /**
+     * Atualiza os dados de um pedido de viagem pendente.
+     * * Apenas campos permitidos na requisição (origem, destino, datas) devem ser passados.
+     *
+     * @param TravelOrder $order Instância do pedido a ser atualizado.
+     * @param array $data Dados validados para atualização.
+     * @return TravelOrder Instância atualizada.
+     * @throws InvalidOrderTransitionException Caso o pedido não esteja no status "solicitado".
+     */
+    public function update(TravelOrder $order, array $data): TravelOrder
+    {
+        // Trava de Estado Absoluta (State Guard)
+        // Se alguém tentar editar via Postman um pedido já aprovado/cancelado, a API lança um HTTP 422.
+        if ($order->status !== TravelOrderStatus::REQUESTED) {
+            throw new InvalidOrderTransitionException('Edição negada. Apenas pedidos com status "solicitado" podem ser alterados.');
+        }
+
+        $order->update($data);
+
+        // O pacote laravel-auditing que você instalou vai detectar o $order->update() 
+        // e salvar um log de evento "updated" automaticamente com o 'old' e 'new'. Lindo, não?
+        
+        return $order;
+    }
+    
+    /**
      * Atualiza o status do pedido garantindo atomicidade.
      * * @param TravelOrder $order Instância do pedido a ser atualizado.
      * @param TravelOrderStatus $newStatus Novo estado desejado.
