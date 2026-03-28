@@ -36,6 +36,8 @@ Para garantir uma aplicação escalável, a arquitetura foi desenhada com base e
 * Autenticação Stateless (JWT) e Rate Limiting: JSON Web Tokens para escalabilidade horizontal. Rotas sensíveis contam com o middleware throttle contra ataques de Brute Force.
 * Strict Types e API Resources: Todo o código PHP utiliza declare(strict_types=1). Os Resources atuam como DTOs de saída.
 
+Nota de Infraestrutura: Para o ambiente local de avaliação, a orquestração foi feita via Laravel Sail para garantir o melhor DX (Developer Experience) e ausência de atritos na máquina do revisor. Em um cenário real de deploy, esta camada seria substituída por um Dockerfile multi-stage otimizado (ex: FrankenPHP/Octane) focado em performance.
+
 ## Integração Contínua (CI/CD)
 
 O repositório conta com um workflow automatizado configurado no GitHub Actions. A cada Push ou Pull Request na branch main:
