@@ -62,7 +62,7 @@ make setup
 O banco inicializa com dois perfis de teste para validação das regras de acesso (ACL):
 
 Perfil          | E-mail          | Senha    | Permissoes
-________________|_________________|__________|_______________________________________________________
+__________________________________________________________________________________________________
 Administrador   | admin@email.com | password | Aprova/cancela pedidos, ve todos usuarios e auditoria.
 Usuario Comum   | user@email.com  | password | Cria/Edita pedidos e ve estritamente os proprios registros.
 
