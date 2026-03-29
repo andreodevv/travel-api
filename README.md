@@ -61,10 +61,8 @@ make setup
 ### 2. Credenciais de Teste (Seeders)
 O banco inicializa com dois perfis de teste para validação das regras de acesso (ACL):
 
-Perfil          | E-mail          | Senha    | Permissoes
-__________________________________________________________________________________________________
-Administrador   | admin@email.com | password | Aprova/cancela pedidos, ve todos usuarios e auditoria.
-Usuario Comum   | user@email.com  | password | Cria/Edita pedidos e ve estritamente os proprios registros.
+user: Administrador   | email: admin@email.com | senha: password | Aprova/cancela pedidos, ve todos usuarios e auditoria.
+user: Usuario Comum   | email: user@email.com  | senha: password | Cria/Edita pedidos e ve estritamente os proprios registros.
 
 ## Documentação Interativa da API (Swagger)
 
