@@ -90,5 +90,11 @@ make test
 * make clean : Remove containers e realiza o expurgo dos volumes do banco de dados.
 
 ---
-Nota para avaliacao: Para conectar no banco via DBeaver ou TablePlus, utilize: Host localhost, Porta 3306, User sail, Pass password, DB laravel. 
+Nota para avaliacao: Para conectar no banco via DBeaver ou TablePlus, utilize: 
+Host: localhost, 
+Porta: 3306, 
+User: sail, 
+Pass: password, 
+DB:laravel.
+
 O Dicionario de Dados pode ser lido nas propriedades das colunas do proprio banco.
